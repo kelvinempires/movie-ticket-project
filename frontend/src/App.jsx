@@ -17,14 +17,15 @@ import PrivacyPolicy from "./pages/Privacy";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import EmailVerify from "./pages/EmailVerify";
-import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // import Checkout from "./pages/Checkout";
 
 const App = () => {
   return (
     <div className="text-[#e2e2e2] bg h-full flex flex-col">
+      <ToastContainer />
       <Navbar />
 
       <div className="flex-grow">

@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import {
   FaTicketAlt,
   FaChevronLeft,
@@ -8,39 +9,87 @@ import {
   FaArrowLeft,
   FaTimes,
   FaChevronDown,
+  FaSpinner,
 } from "react-icons/fa";
 import { useSwipeable } from "react-swipeable";
 import PropTypes from "prop-types";
+import { ShopContext } from "../context/ShopContext";
 
 const TrendingSlider = ({ movies }) => {
+  const { backendUrl } = useContext(ShopContext);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const [showtimes, setShowtimes] = useState({});
+  const [loadingShowtimes, setLoadingShowtimes] = useState(false);
+  const [error, setError] = useState(null);
 
-  const showtimesByDate = {
-    "2025-05-28": [
-      { time: "1:00 PM", seatsAvailable: 45 },
-      { time: "4:00 PM", seatsAvailable: 32 },
-      { time: "8:00 PM", seatsAvailable: 12 },
-    ],
-    "2025-05-29": [
-      { time: "2:00 PM", seatsAvailable: 56 },
-      { time: "6:00 PM", seatsAvailable: 23 },
-    ],
-    "2025-05-30": [
-      { time: "12:00 PM", seatsAvailable: 67 },
-      { time: "3:00 PM", seatsAvailable: 41 },
-      { time: "7:00 PM", seatsAvailable: 8 },
-    ],
+  // Fetch showtimes for the current movie
+  const fetchShowtimes = async (movieId) => {
+    if (!movieId) return;
+
+    setLoadingShowtimes(true);
+    setError(null);
+    try {
+      const response = await axios.get(
+        `${backendUrl}/api/showtime/get?movie=${movieId}`
+      );
+
+      // Transform showtimes into date-grouped format
+      const groupedByDate = response.data.reduce((acc, showtime) => {
+        if (!showtime.showDate || !showtime.startTime) return acc;
+
+        const dateStr = new Date(showtime.showDate).toISOString().split("T")[0];
+        if (!acc[dateStr]) acc[dateStr] = [];
+
+        // Calculate available seats
+        const totalSeats = showtime.screen?.seatLayout?.length || 0;
+        const bookedSeats = showtime.bookedSeats?.length || 0;
+        const seatsAvailable = totalSeats - bookedSeats;
+
+        acc[dateStr].push({
+          time: formatTime(showtime.startTime),
+          seatsAvailable,
+          showtimeId: showtime._id,
+          originalData: showtime, // Keep reference to original data
+        });
+
+        return acc;
+      }, {});
+
+      setShowtimes(groupedByDate);
+    } catch (err) {
+      console.error("Failed to fetch showtimes:", err);
+      setError("Failed to load showtimes. Please try again later.");
+      setShowtimes({});
+    } finally {
+      setLoadingShowtimes(false);
+    }
+  };
+
+  // Format time from "14:00" to "2:00 PM"
+  const formatTime = (timeString) => {
+    if (!timeString) return "";
+    const [hours, minutes] = timeString.split(":");
+    const hour = parseInt(hours, 10);
+    const period = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${period}`;
   };
 
   const goToSlide = (index) => {
-    setCurrentSlide((index + movies.length) % movies.length);
+    const newIndex = (index + movies.length) % movies.length;
+    setCurrentSlide(newIndex);
     setShowBooking(false);
     setSelectedDate("");
     setSelectedTime("");
+
+    // Fetch showtimes when slide changes
+    if (movies[newIndex]?.id) {
+      fetchShowtimes(movies[newIndex].id);
+    }
   };
 
   const handlers = useSwipeable({
@@ -56,13 +105,20 @@ const TrendingSlider = ({ movies }) => {
     return () => clearInterval(interval);
   }, [currentSlide, isPaused]);
 
+  // Initialize showtimes for first movie
+  useEffect(() => {
+    if (movies.length > 0) {
+      fetchShowtimes(movies[0].id);
+    }
+  }, [movies]);
+
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value);
     setSelectedTime("");
   };
 
   const getDateOptions = () => {
-    return Object.keys(showtimesByDate).map((date) => ({
+    return Object.keys(showtimes).map((date) => ({
       value: date,
       label: new Date(date).toLocaleDateString(undefined, {
         weekday: "long",
@@ -71,6 +127,14 @@ const TrendingSlider = ({ movies }) => {
       }),
       isWeekend: [0, 6].includes(new Date(date).getDay()),
     }));
+  };
+
+  const getSelectedShowtimeId = () => {
+    if (!selectedDate || !selectedTime) return null;
+    const showtime = showtimes[selectedDate]?.find(
+      (st) => st.time === selectedTime
+    );
+    return showtime?.showtimeId;
   };
 
   return (
@@ -150,7 +214,7 @@ const TrendingSlider = ({ movies }) => {
 
       {/* Booking Modal Overlay */}
       {showBooking && (
-        <div className="fixed inset-0 z-50 flex top-12  justify-center p-4">
+        <div className="fixed inset-0 z-50 flex top-12 justify-center p-4">
           {/* Blurred Background */}
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -175,7 +239,22 @@ const TrendingSlider = ({ movies }) => {
                 </button>
               </div>
 
-              {!selectedDate ? (
+              {loadingShowtimes ? (
+                <div className="py-8 flex flex-col items-center justify-center gap-3">
+                  <FaSpinner className="animate-spin text-2xl text-blue-400" />
+                  <p className="text-gray-400">Loading showtimes...</p>
+                </div>
+              ) : error ? (
+                <div className="py-4 text-center text-red-400">
+                  {error}
+                  <button
+                    onClick={() => fetchShowtimes(movies[currentSlide]?.id)}
+                    className="mt-2 text-sm text-blue-400 hover:text-blue-300 transition flex items-center justify-center gap-1 mx-auto"
+                  >
+                    <FaArrowLeft className="text-xs" /> Retry
+                  </button>
+                </div>
+              ) : !selectedDate ? (
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm text-gray-300 mb-2 block font-medium">
@@ -186,6 +265,7 @@ const TrendingSlider = ({ movies }) => {
                         value={selectedDate}
                         onChange={handleDateChange}
                         className="w-full px-4 py-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none"
+                        disabled={Object.keys(showtimes).length === 0}
                       >
                         <option value="">Select a date</option>
                         {getDateOptions().map((date) => (
@@ -197,6 +277,11 @@ const TrendingSlider = ({ movies }) => {
                       <FaChevronDown className="absolute right-3 top-3.5 text-gray-400 pointer-events-none" />
                     </div>
                   </div>
+                  {Object.keys(showtimes).length === 0 && (
+                    <div className="py-4 text-center text-gray-400">
+                      No showtimes available for this movie
+                    </div>
+                  )}
                 </div>
               ) : !selectedTime ? (
                 <div className="space-y-4">
@@ -206,9 +291,9 @@ const TrendingSlider = ({ movies }) => {
                       {new Date(selectedDate).toLocaleDateString()}
                     </label>
                     <div className="grid grid-cols-2 gap-3">
-                      {showtimesByDate[selectedDate].map((showtime) => (
+                      {showtimes[selectedDate]?.map((showtime) => (
                         <button
-                          key={showtime.time}
+                          key={`${selectedDate}-${showtime.time}`}
                           onClick={() => setSelectedTime(showtime.time)}
                           className={`px-4 py-3 rounded-lg border transition-all flex flex-col items-center ${
                             showtime.seatsAvailable < 10
@@ -264,7 +349,17 @@ const TrendingSlider = ({ movies }) => {
                   </div>
 
                   <Link
-                    to={`/book-ticket/${movies[currentSlide].id}?date=${selectedDate}&time=${selectedTime}`}
+                    to={`/book-ticket/${getSelectedShowtimeId()}`}
+                    state={{
+                      movie: movies[currentSlide],
+                      showtime: {
+                        date: selectedDate,
+                        time: selectedTime,
+                        seatsAvailable: showtimes[selectedDate]?.find(
+                          (st) => st.time === selectedTime
+                        )?.seatsAvailable,
+                      },
+                    }}
                     className="block w-full text-center bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold px-4 py-3 rounded-lg transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2"
                   >
                     <FaTicketAlt /> Select Seats

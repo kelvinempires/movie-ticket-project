@@ -19,78 +19,71 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onSubmitHandler = async (e) => {
-    e.preventDefault();
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-    if (!backendUrl) {
-      toast.error("Backend URL is not configured.");
-      return;
-    }
+const onSubmitHandler = async (e) => {
+  e.preventDefault();
+  if (!email || !password) {
+    toast.error("Please fill in all fields");
+    return;
+  }
+  if (!backendUrl) {
+    toast.error("Backend URL is not configured.");
+    return;
+  }
 
-    // Basic email validation
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      toast.error("Enter a valid email.");
-      return;
-    }
+  // Basic email validation
+  if (!/\S+@\S+\.\S+/.test(email)) {
+    toast.error("Enter a valid email.");
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      if (currentState === "Sign Up") {
-        const response = await axios.post(`${backendUrl}/api/user/register`, {
-          name,
-          email,
-          password,
-        });
+  try {
+    const url =
+      currentState === "Sign Up"
+        ? `${backendUrl}/api/user/register`
+        : `${backendUrl}/api/user/login`;
 
-        if (response.data.success) {
-          const { token, user } = response.data;
-          setToken(token);
-          localStorage.setItem("token", token);
+    const data =
+      currentState === "Sign Up"
+        ? { name, email, password }
+        : { email, password };
 
-          if (user) {
-            setUser(user);
-            localStorage.setItem("user", JSON.stringify(user));
-          }
-          toast.success("Sign up successful! Redirecting...");
-          navigate("/");
-        } else {
-          const errorMessage =
-            response?.data?.msg || motion || "Sign up failed.";
-          toast.error(errorMessage);
-        }
-      } else {
-        const response = await axios.post(`${backendUrl}/api/user/login`, {
-          email,
-          password,
-        });
+    const response = await axios.post(url, data);
 
-        if (response.data.success) {
-          const { token, user } = response.data;
-          setToken(token);
-          localStorage.setItem("token", token);
+    if (response.data.success) {
+      const { token, user } = response.data;
+      setToken(token);
+      localStorage.setItem("token", token);
 
-          if (user) {
-            setUser(user);
-            localStorage.setItem("user", JSON.stringify(user));
-          }
-          toast.success("Login successful!");
-          navigate("/");
-        } else {
-          console.error("Login failed:", response.data.msg || "Login failed.");
-          toast.error(response.data.msg || "Login failed.");
-        }
+      if (user) {
+        setUser(user);
+        localStorage.setItem("user", JSON.stringify(user));
       }
-    } catch (error) {
-      console.error("Error during login/signup:", error);
-      toast.error(error.response?.data?.msg || "An unexpected error occurred.");
-    } finally {
-      setLoading(false);
+
+      toast.success(
+        currentState === "Login"
+          ? "Login successful!"
+          : "Sign up successful! Redirecting..."
+      );
+      navigate("/");
+    } else {
+      // Handle cases where success is false but request was successful (HTTP 200)
+      const errorMessage = response.data.msg || motion || "Operation failed.";
+      toast.error(errorMessage);
     }
-  };
+  } catch (error) {
+    // Handle HTTP errors (4xx, 5xx)
+    const errorMessage =
+      error.response?.data?.msg ||
+      error.message ||
+      "An unexpected error occurred.";
+    toast.error(errorMessage);
+    console.error("Error during login/signup:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
 
   useEffect(() => {

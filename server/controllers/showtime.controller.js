@@ -15,27 +15,37 @@ export const createShowtime = async (req, res) => {
 };
 
 // GET all showtimes (optionally filter by movie, date, theatre, etc.)
+// controllers/showtime.controller.js
+
 export const getAllShowtimes = async (req, res) => {
   const { movie, theatre, showDate } = req.query;
   let filter = {};
 
-  if (movie) filter.movie = movie;
-  if (theatre) filter.theatre = theatre;
-  if (showDate) filter.showDate = new Date(showDate);
-
   try {
+    // Convert movie ID string to ObjectId if needed
+    if (movie) {
+      filter.movie = mongoose.Types.ObjectId.isValid(movie) 
+        ? new mongoose.Types.ObjectId(movie)
+        : movie;
+    }
+    
+    if (theatre) filter.theatre = theatre;
+    if (showDate) filter.showDate = new Date(showDate);
+
     const showtimes = await Showtime.find(filter)
       .populate("movie theatre screen")
       .sort({ showDate: 1, startTime: 1 });
 
     res.status(200).json(showtimes);
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error fetching showtimes", error: err.message });
+    console.error("Error in getAllShowtimes:", err);
+    res.status(500).json({ 
+      message: "Error fetching showtimes",
+      error: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 };
-
 // GET single showtime by ID
 export const getShowtimeById = async (req, res) => {
   try {
