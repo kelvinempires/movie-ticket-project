@@ -26,7 +26,7 @@ const Movie2Card = ({ movie, loading }) => {
         <img
           src={imageUrl}
           alt={movie.title || movie.name}
-          className="w-full h-48 object-cover rounded-lg"
+          className="w-full h-48 object-cover rounded-lg hover:opacity-90 hover:scale-105 transition duration-300"
           loading="lazy"
         />
         <div className="mt-2 text-white">

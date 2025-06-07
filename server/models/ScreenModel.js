@@ -5,7 +5,22 @@ const screenSchema = new mongoose.Schema(
     name: String,
     theatre: { type: mongoose.Schema.Types.ObjectId, ref: "Theatre" },
     totalSeats: Number,
-    seatLayout: { type: Array, default: [] }, // optional seat map
+    seatLayout: [
+      {
+        row: String,
+        seats: [
+          {
+            number: String,
+            type: {
+              type: String,
+              enum: ["regular", "premium", "vip"],
+              default: "regular",
+            },
+            price: Number,
+          },
+        ],
+      },
+    ],
   },
   { timestamps: true }
 );

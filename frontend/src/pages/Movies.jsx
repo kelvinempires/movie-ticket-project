@@ -42,7 +42,7 @@ const MoviesPage = () => {
       )}
 
       {/* Movie Grid */}
-      <div className="max-w-7xl mx-auto pl-6 sm:pl-16 p-4 mt-10">
+      <div className="flex flex-col items-center mx-auto p-4 mt-10">
         <h2 className=" font-playfair text-2xl md:text-3xl font-bold mb-6">
           🎥 All Movies
         </h2>
@@ -56,7 +56,7 @@ const MoviesPage = () => {
               ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          <div className=" grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-6">
             {movies.map((movie) => (
               <Movie2Card key={movie.id} movie={movie} />
             ))}
