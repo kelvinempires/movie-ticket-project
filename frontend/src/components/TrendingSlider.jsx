@@ -27,47 +27,52 @@ const TrendingSlider = ({ movies }) => {
   const [error, setError] = useState(null);
 
   // Fetch showtimes for the current movie
-  const fetchShowtimes = async (movieId) => {
-    if (!movieId) return;
+ const fetchShowtimes = async (movieId) => {
+   if (!movieId) return;
 
-    setLoadingShowtimes(true);
-    setError(null);
-    try {
-      const response = await axios.get(
-        `${backendUrl}/api/showtime/get?movie=${movieId}`
-      );
+   setLoadingShowtimes(true);
+   setError(null);
+   try {
+     const response = await axios.get(
+       `${backendUrl}/api/showtime/movie/${movieId}`
+     );
 
-      // Transform showtimes into date-grouped format
-      const groupedByDate = response.data.reduce((acc, showtime) => {
-        if (!showtime.showDate || !showtime.startTime) return acc;
+     // Transform showtimes into date-grouped format
+     const groupedByDate = response.data.reduce((acc, showtime) => {
+       if (!showtime.showDate || !showtime.startTime) return acc;
 
-        const dateStr = new Date(showtime.showDate).toISOString().split("T")[0];
-        if (!acc[dateStr]) acc[dateStr] = [];
+       const dateStr = new Date(showtime.showDate).toISOString().split("T")[0];
+       if (!acc[dateStr]) acc[dateStr] = [];
 
-        // Calculate available seats
-        const totalSeats = showtime.screen?.seatLayout?.length || 0;
-        const bookedSeats = showtime.bookedSeats?.length || 0;
-        const seatsAvailable = totalSeats - bookedSeats;
+       // Get available seats count from the screen's seatLayout
+       const totalSeats =
+         showtime.screen?.seatLayout?.reduce(
+           (sum, row) => sum + row.seats.length,
+           0
+         ) || 0;
 
-        acc[dateStr].push({
-          time: formatTime(showtime.startTime),
-          seatsAvailable,
-          showtimeId: showtime._id,
-          originalData: showtime, // Keep reference to original data
-        });
+       const bookedSeats = showtime.bookedSeats?.length || 0;
+       const seatsAvailable = totalSeats - bookedSeats;
 
-        return acc;
-      }, {});
+       acc[dateStr].push({
+         time: formatTime(showtime.startTime),
+         seatsAvailable,
+         showtimeId: showtime._id,
+         originalData: showtime,
+       });
 
-      setShowtimes(groupedByDate);
-    } catch (err) {
-      console.error("Failed to fetch showtimes:", err);
-      setError("Failed to load showtimes. Please try again later.");
-      setShowtimes({});
-    } finally {
-      setLoadingShowtimes(false);
-    }
-  };
+       return acc;
+     }, {});
+
+     setShowtimes(groupedByDate);
+   } catch (err) {
+     console.error("Failed to fetch showtimes:", err);
+     setError("Failed to load showtimes. Please try again later.");
+     setShowtimes({});
+   } finally {
+     setLoadingShowtimes(false);
+   }
+ };
 
   // Format time from "14:00" to "2:00 PM"
   const formatTime = (timeString) => {

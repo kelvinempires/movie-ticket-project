@@ -11,7 +11,6 @@ import movieRouter from "./routes/movie.routes.js";
 import notificationRouter from "./routes/notification.routes.js";
 import paymentRouter from "./routes/payment.route.js";
 import screenRouter from "./routes/screen.routes.js";
-import seatRouter from "./routes/seat.routes.js";
 import showtimeRouter from "./routes/showtime.routes.js";
 import theatreRouter from "./routes/theatre.routes.js";
 
@@ -58,7 +57,6 @@ app.use("/api/movie", movieRouter);
 app.use("/api/notification", notificationRouter);
 app.use("/api/payment", paymentRouter);
 app.use("/api/screen", screenRouter);
-app.use("/api/seat", seatRouter);
 app.use("/api/showtime", showtimeRouter);
 app.use("/api/theater", theatreRouter);
 

@@ -2,18 +2,13 @@ import mongoose from "mongoose";
 
 const movieSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
-    description: String,
-    genre: [String],
-    language: String,
-    duration: Number, // in minutes
-    releaseDate: Date,
-    posterUrl: String,
-    trailerUrl: String,
-    rating: Number, // e.g. 7.5
+    tmdbId: { type: Number, required: true }, // Connects to TMDB API
+    title: String, // Optional: useful for admin panel
+    isActive: { type: Boolean, default: true }, // for internal usage
   },
   { timestamps: true }
 );
+
 
 const Movie =
   mongoose.models.Movie || mongoose.model("Movie", movieSchema);
