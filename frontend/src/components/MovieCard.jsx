@@ -27,11 +27,12 @@ const MovieCard = ({ movie, loading }) => {
         className="h-64 rounded-xl"
         alt=""
       />
-      <div className="flex flex-col text-sm">
+      <div className="flex flex-col text-sm items-center">
         <h2 className="font-bold">{movie.title || movie.name}</h2>
-        <span className="text-xs text-slate-200">
-          {movie.vote_average} | {movie.release_date || "N/A"}
-        </span>
+        <p className="text-xs text-gray-300">
+          ⭐ {movie.vote_average?.toFixed(1) || "N/A"} |{" "}
+          {movie.release_date || movie.first_air_date || "N/A"}
+        </p>
       </div>
     </Link>
   );

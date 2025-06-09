@@ -44,7 +44,7 @@ const MoviesPage = () => {
       {/* Movie Grid */}
       <div className="flex flex-col items-center mx-auto p-4 mt-10">
         <h2 className=" font-playfair text-2xl md:text-3xl font-bold mb-6">
-          🎥 All Movies
+          🎥 Top Movies
         </h2>
 
         {loading ? (
