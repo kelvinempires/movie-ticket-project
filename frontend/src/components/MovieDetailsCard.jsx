@@ -69,7 +69,10 @@ const MovieDetailsCard = ({ title, name, movie, vote_average }) => {
             >
               {isNowShowing ? "Now Showing" : "Coming Soon"}
             </span>
-            <span className="text-gray-300">Release Date:</span>
+            {movie?.release_date &&
+              new Date(movie.release_date) <= new Date() && (
+                <span className="text-gray-300">Release Date:</span>
+              )}{" "}
             <span className="text-sm">{movie?.release_date}</span>
             <div className="flex items-center gap-2">
               <span className="text-yellow-500 text-3xl">
@@ -83,7 +86,6 @@ const MovieDetailsCard = ({ title, name, movie, vote_average }) => {
             {movie?.title || movie?.name}
           </h2>
           <p className="text-lg leading-relaxed flex-wrap">{movie?.overview}</p>
-
           <div className="flex flex-col sm:flex-row sm:gap-10 gap-4 mt-4">
             <div>
               <h1 className="text-white">Genres:</h1>
