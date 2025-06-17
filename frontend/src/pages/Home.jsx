@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import MovieCard from "../components/MovieCard";
 import axios from "axios";
 import { options } from "../services/omdbApi";
-import TrendingSlider from "../components/TrendingSlider"; // <-- import only once!
+import TrendingSlider from "../components/TrendingSlider";
 
 const Home = () => {
   const [trendingMovies, setTrendingMovies] = useState([]);
