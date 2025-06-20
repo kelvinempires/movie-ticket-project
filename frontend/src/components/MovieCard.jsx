@@ -1,6 +1,6 @@
 import Skeleton from "react-loading-skeleton";
 import { Link } from "react-router-dom";
-import "react-loading-skeleton/dist/skeleton.css"; // Don't forget this import for proper styling
+import "react-loading-skeleton/dist/skeleton.css";
 
 const MovieCard = ({ movie, loading }) => {
   if (loading) {
