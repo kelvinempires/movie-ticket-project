@@ -83,7 +83,7 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Newsletter</h4>
             <p className="text-gray-400 mb-4">
-              Subscribe to our newsletter for the latest updates and offers.
+              Subscribe to our newsletter for the latest movie updates and offers.
             </p>
             <div className="flex">
               <input
