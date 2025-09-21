@@ -49,7 +49,7 @@ const Navbar = () => {
   }, [user]);
 
   return (
-    <nav className="shadow-md fixed z-30 w-full text-white shadow-lg bg-gradient-to-b from-gray-900 via-black/60 to-transparent px-0 sm:px-14">
+    <nav className=" fixed z-30 w-full text-white shadow-lg bg-gradient-to-b from-gray-900 via-black/60 to-transparent px-0 sm:px-14">
       <div className="container mx-auto px-8 py-3">
         <div className="flex justify-between items-center">
           {/* Logo */}
